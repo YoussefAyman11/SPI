@@ -60,6 +60,7 @@ module SPI_Slave
         else if(tx_end) begin
             data_out <= data;
             flag <= 'b0;
+            n <= 'b0;
         end
 		
         else if(!ss) begin
@@ -67,34 +68,35 @@ module SPI_Slave
 			
             if(flag == 0) begin
                 miso <= data_in[bits_num - 1];
-                data <= (CPHA)?(data):({mosi,7'b0});
+                data[bits_num - 2:0] <= 'b0;
+                data[bits_num - 1] <= (CPHA)?(data[bits_num - 1]):(mosi);
                 flag <= 'b1;
             end
 			
             else begin
                 case(mode)
                     'b00: begin
-                        miso <= (neg_edge)?(data_in[7-n]):(miso);
-                        data[7-n] <= (pos_edge)?(mosi):(data[7-n]);
+                        miso <= (neg_edge)?(data_in[bits_num-1-n]):(miso);
+                        data[bits_num-1-n] <= (pos_edge)?(mosi):(data[bits_num-1-n]);
                     end
                     'b01: begin
-                        miso <= (pos_edge)?(data_in[7-n]):(miso);
+                        miso <= (pos_edge)?(data_in[bits_num-1-n]):(miso);
                         if(n == 0)
                             data[0] <= (neg_edge)?(mosi):(data[0]);
                         else
-                            data[7-n+1] <= (neg_edge)?(mosi):(data[7-n+1]);
+                            data[bits_num-n] <= (neg_edge)?(mosi):(data[bits_num-n]);
                     end
                     'b10: begin
-                        miso <= (pos_edge)?(data_in[7-n]):(miso);
-                        data[7-n] <= (neg_edge)?(mosi):(data[7-n]);
+                        miso <= (pos_edge)?(data_in[bits_num-1-n]):(miso);
+                        data[bits_num-1-n] <= (neg_edge)?(mosi):(data[bits_num-1-n]);
                     end
                     'b11: begin
-                        miso <= (neg_edge)?(data_in[7-n]):(miso);
+                        miso <= (neg_edge)?(data_in[bits_num-1-n]):(miso);
                         if(n == 0) begin
                             data[0] <= (pos_edge)?(mosi):(data[0]);
                         end
                         else begin
-                            data[7-n+1] <= (pos_edge)?(mosi):(data[7-n+1]);
+                            data[bits_num-n] <= (pos_edge)?(mosi):(data[bits_num-n]);
                         end
                     end
                 endcase
