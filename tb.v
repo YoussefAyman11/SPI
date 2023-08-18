@@ -22,7 +22,7 @@
 
 module tb();
 
-parameter mode = 2'b11;
+parameter mode = 2'b00;
 parameter bits_num = 8;
 parameter clk_period = 10;
 
