@@ -38,7 +38,7 @@ module SPI_Master
     reg sclk_reg;
     wire neg_edge,pos_edge;
     reg [$clog2(bits_num) - 1:0] n;
-    reg [3:0] counts;
+    reg [$clog2(bits_num):0] counts;
     reg start;
     reg flag; 
     reg [bits_num - 1:0] data;
@@ -71,7 +71,8 @@ module SPI_Master
 			ss <= 'b0;
 			start <= 'b1;
 			tx_end <= 'b0;
-			data <= 8'b0;
+			data <= 'b0;
+			mosi <= data_in[bits_num - 1];
         end
         
         else if(start) begin
@@ -85,7 +86,8 @@ module SPI_Master
                 sclk <= ~sclk;
             end
 			
-            if(counts == 0) begin
+            if(counts == 2*bits_num | counts == 0) begin
+                
                 tx_end <= 'b1;
                 ss <= 'b1;
                 sclk <= CPOL;
@@ -96,34 +98,35 @@ module SPI_Master
 			
             if(flag == 0) begin
                 mosi <= data_in[bits_num - 1];
-                data <= (CPHA)?(data):({miso,7'b0});
+                data[bits_num - 2:0] <= 'b0;
+                data[bits_num - 1] <= (CPHA)?(data[bits_num - 1]):(miso);
                 flag <= 'b1;
             end
 			
             else begin
                 case(mode)
                     'b00: begin
-                        mosi <= (neg_edge)?(data_in[7-n]):(mosi);
-                        data[7-n] <= (pos_edge)?(miso):(data[7-n]);
+                        mosi <= (neg_edge)?(data_in[bits_num-1-n]):(mosi);
+                        data[bits_num-1-n] <= (pos_edge)?(miso):(data[bits_num-1-n]);
                     end
                     'b01: begin
-                        mosi <= (pos_edge)?(data_in[7-n]):(mosi);
+                        mosi <= (pos_edge)?(data_in[bits_num-1-n]):(mosi);
                         if(n == 0)
                             data[0] <= (neg_edge)?(miso):(data[0]);
                         else
-                            data[7-n+1] <= (neg_edge)?(miso):(data[7-n+1]);
+                           data[bits_num-n] <= (neg_edge)?(miso):(data[bits_num-n]);
                     end
                     'b10: begin
-                        mosi <= (pos_edge)?(data_in[7-n]):(mosi);
-                        data[7-n] <= (neg_edge)?(miso):(data[7-n]);
+                        mosi <= (pos_edge)?(data_in[bits_num-1-n]):(mosi);
+                        data[bits_num-1-n] <= (neg_edge)?(miso):(data[bits_num-1-n]);
                     end
                     'b11: begin
-                        mosi <= (neg_edge)?(data_in[7-n]):(mosi);
+                        mosi <= (neg_edge)?(data_in[bits_num-1-n]):(mosi);
                         if(n == 0) begin
                             data[0] <= (pos_edge)?(miso):(data[0]);
                         end
                         else begin
-                            data[7-n+1] <= (pos_edge)?(miso):(data[7-n+1]);
+                            data[bits_num-n] <= (pos_edge)?(miso):(data[bits_num-n]);
                         end
                     end
                 endcase
@@ -133,6 +136,7 @@ module SPI_Master
         else if(tx_end) begin
             data_out <= data;
             flag <= 'b0;
+            n <= 'b0;
         end
 		
         else
