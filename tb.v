@@ -69,6 +69,7 @@ initial begin
     slave2_data_in = 'b00101010;
     slave3_data_in = 'b11110101;
     slave4_data_in = 'b10111001;
+    #(clk_period);
     sel = 'b00;
     tx_start = 1;
     #(clk_period);
@@ -100,6 +101,7 @@ initial begin
     slave2_data_in = 'b00001101;
     slave3_data_in = 'b11111110;
     slave4_data_in = 'b00011110;
+    #(clk_period);
     sel = 'b00;
     tx_start = 1;
     #(clk_period);
